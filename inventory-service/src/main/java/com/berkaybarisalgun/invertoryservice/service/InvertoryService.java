@@ -1,11 +1,13 @@
 package com.berkaybarisalgun.invertoryservice.service;
 
+import com.berkaybarisalgun.invertoryservice.dto.InventoryResponse;
 import com.berkaybarisalgun.invertoryservice.model.Inventory;
 import com.berkaybarisalgun.invertoryservice.repository.InventoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -15,16 +17,15 @@ public class InvertoryService {
     private final InventoryRepository repository;
 
     @Transactional(readOnly = true)
-    public boolean isInStock(String skuCode) throws Exception {
-        Optional<Inventory> inventory=repository.findBySkuCode(skuCode);
-        int stock=0;
-        if(inventory.isPresent()){
-            stock=inventory.get().getQuantity();
-        }
-        else{
-            throw new Exception("not found");
-        }
-        return stock>0;
+    public List<InventoryResponse> isInStock(List<String> skuCode){
+        return repository.findBySkuCodeIn(skuCode).stream()
+                .map(inventory ->
+                    InventoryResponse.builder()
+                            .skuCode(inventory.getSkuCode())
+                            .isInStock(inventory.getQuantity()>0)
+                            .build()
+                ).toList();
+
     }
 
 }
