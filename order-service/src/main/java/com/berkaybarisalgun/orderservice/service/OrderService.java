@@ -8,12 +8,16 @@ import com.berkaybarisalgun.orderservice.model.OrderLineItems;
 import com.berkaybarisalgun.orderservice.repository.OrderRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.net.http.HttpRequest;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -49,11 +53,17 @@ public class OrderService {
 
         boolean allProductsInsStock = Arrays.stream(inventoryResponsesArray).allMatch(InventoryResponse::isInStock);
 
+        List<String> nonStockItems = Arrays.stream(inventoryResponsesArray)
+                .filter(inventoryResponse ->!inventoryResponse.isInStock())
+                .map(inventoryResponse -> inventoryResponse.getSkuCode())
+                .collect(Collectors.toList());
+
         if(allProductsInsStock){
             repository.save(order);
         }
         else{
-            throw new IllegalArgumentException("Product is not in stock, please try again later");
+            String errorMessage = "Product(s) " + String.join(", ", nonStockItems) + " are not in stock, please try again later";
+            throw new ResponseStatusException(HttpStatus.CONFLICT, errorMessage);
         }
 
     }
