@@ -23,7 +23,7 @@ public class InvertoryServiceApplication {
 
 			Inventory invertory1=new Inventory();
 			invertory1.setSkuCode("iphone_13_red");
-			invertory1.setQuantity(0);
+			invertory1.setQuantity(2);
 
 			inventoryRepository.save(invertory);
 			inventoryRepository.save(invertory1);
